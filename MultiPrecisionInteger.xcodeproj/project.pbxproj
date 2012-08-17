@@ -10,6 +10,7 @@
 		4A390F0715DDFA500028CFBB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A390F0615DDFA500028CFBB /* Foundation.framework */; };
 		4A390F0A15DDFA500028CFBB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A390F0915DDFA500028CFBB /* main.m */; };
 		4A390F0E15DDFA500028CFBB /* MultiPrecisionInteger.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4A390F0D15DDFA500028CFBB /* MultiPrecisionInteger.1 */; };
+		4AF9B35815DE02060025813D /* MPInteger.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AF9B35715DE02060025813D /* MPInteger.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,6 +32,8 @@
 		4A390F0915DDFA500028CFBB /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		4A390F0C15DDFA500028CFBB /* MultiPrecisionInteger-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MultiPrecisionInteger-Prefix.pch"; sourceTree = "<group>"; };
 		4A390F0D15DDFA500028CFBB /* MultiPrecisionInteger.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = MultiPrecisionInteger.1; sourceTree = "<group>"; };
+		4AF9B35615DE02060025813D /* MPInteger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPInteger.h; sourceTree = "<group>"; };
+		4AF9B35715DE02060025813D /* MPInteger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPInteger.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +77,8 @@
 			isa = PBXGroup;
 			children = (
 				4A390F0915DDFA500028CFBB /* main.m */,
+				4AF9B35615DE02060025813D /* MPInteger.h */,
+				4AF9B35715DE02060025813D /* MPInteger.m */,
 				4A390F0D15DDFA500028CFBB /* MultiPrecisionInteger.1 */,
 				4A390F0B15DDFA500028CFBB /* Supporting Files */,
 			);
@@ -139,6 +144,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4A390F0A15DDFA500028CFBB /* main.m in Sources */,
+				4AF9B35815DE02060025813D /* MPInteger.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -229,6 +235,7 @@
 				4A390F1315DDFA500028CFBB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
