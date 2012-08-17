@@ -25,6 +25,7 @@ int main(int argc, const char * argv[])
     @autoreleasepool {
         if (TESTING == YES) {
             NSLog(@"Hello, World!");
+            
     
         } else {
             // the cipher text c:

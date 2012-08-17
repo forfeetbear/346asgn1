@@ -10,6 +10,8 @@
 
 @interface MPInteger : NSObject
 
+@property BOOL isPositive;
+@property NSMutableArray *arrayRep;
 // you will need these for me to test your code:
 -(id) initWithString: (NSString *) x;
 -(NSString *) description;
