@@ -24,8 +24,8 @@ int main(int argc, const char * argv[])
     
     @autoreleasepool {
         if (TESTING == YES) {
-            NSLog(@"Hello, World!");
-            
+            MPInteger *number = [[MPInteger alloc] initWithString:@"1234567890"];
+            NSLog(@"%@", [number description]);
     
         } else {
             // the cipher text c:

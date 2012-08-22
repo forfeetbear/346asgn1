@@ -8,10 +8,11 @@
 
 #import <Foundation/Foundation.h>
 
-@interface MPInteger : NSObject
+@interface MPInteger : NSObject {
+    NSMutableArray *number;
+    BOOL isPositive;
+}
 
-@property BOOL isPositive;
-@property NSMutableArray *arrayRep;
 // you will need these for me to test your code:
 -(id) initWithString: (NSString *) x;
 -(NSString *) description;
