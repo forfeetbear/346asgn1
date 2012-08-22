@@ -28,5 +28,6 @@
 // you will also need to implement this comparison
 // to decode the secret message:
 -(BOOL) isLessThan: (MPInteger *) x;
+-(BOOL) isPositive;
 
 @end

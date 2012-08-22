@@ -24,9 +24,12 @@ int main(int argc, const char * argv[])
     
     @autoreleasepool {
         if (TESTING == YES) {
-            MPInteger *number = [[MPInteger alloc] initWithString:@"1234567890"];
-            NSLog(@"%@", [number description]);
-    
+            MPInteger *number1 = [[MPInteger alloc] initWithString:@"1111111111111111111111"];            
+            MPInteger *number2 = [[MPInteger alloc] initWithString:@"-1111111111111111111112"];
+            MPInteger *number3 = [number1 add:number2];
+            NSLog(@"%@", number1);
+            NSLog(@"%@", number2);
+            NSLog(@"%@", number3);
         } else {
             // the cipher text c:
             MPInteger *encodedMessage = [[MPInteger alloc] initWithString:@"7807512491293448839140145421143868935616117960859576537030545231939229"];
