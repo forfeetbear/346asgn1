@@ -120,11 +120,7 @@
 
 -(int) digitAt:(int) index {
     if (index < [self length] && index >= 0) {
-        if (isPositive) {
-            return [[number objectAtIndex:index] intValue];            
-        } else {
-            return -1 * [[number objectAtIndex:index] intValue];
-        }
+            return [[number objectAtIndex:index] intValue];
     }
     return -1;
 }
@@ -217,7 +213,48 @@
 }
 
 -(MPInteger *) multiply:(MPInteger *)x {
-    return nil;
+    NSMutableArray *lines = [[NSMutableArray alloc] initWithCapacity:[x length]];
+    NSMutableString *resString;
+    int carry, numZeroes = 0;
+    for (int i = [x length] - 1; i >= 0; i--, numZeroes++) {
+        resString = [NSMutableString string];
+        carry = 0;
+        
+        for(int y = 0; y < numZeroes; y++) {
+            [resString appendString:@"0"];
+        }
+        
+        for (int j = [self length] - 1; j >= 0; j--) { //Building it backwards again
+            carry =  carry + [x digitAt:i] * [self digitAt:j];
+            [resString appendFormat:@"%d", carry % BASE];
+            carry /= BASE;
+        }
+        [resString appendFormat:@"%d", carry];
+        
+        // Reverse the string and add it to the array of things to be summed
+        int x = [resString length];
+        NSMutableString *result = [NSMutableString string];
+        while (x > 0) {
+            x--;
+            [result appendString:[resString substringWithRange:NSMakeRange(x, 1)]];
+        }
+        [lines addObject:[[MPInteger alloc] initWithString:result]];
+    }
+    
+    // Now we have all the lines so just sum them up to get the final answer
+    MPInteger *finalResult = [[MPInteger alloc] initWithString:@"0"];
+    for (int i = 0; i < [lines count]; i++) {
+        finalResult = [finalResult add:[lines objectAtIndex:i]];
+    }
+    finalResult.isPositive = x.isPositive == self.isPositive;
+    return finalResult;
+}
+
+-(BOOL) isZero {
+    for (int i = 0; i < [number count]; i++) {
+        if ([[number objectAtIndex:i] intValue] != 0) return NO;
+    }
+    return YES;
 }
 
 -(MPInteger *) divideBy:(MPInteger *)x {
@@ -228,7 +265,19 @@
     return nil;
 }
 
+-(int) compareWith:(MPInteger *)x {
+    MPInteger *result = [self subtract:x];
+    if ([result isZero]) {
+        return 0;
+    } else if(result.isPositive) {
+        return 1;
+    } else {
+        return -1;
+    }
+}
+
 -(BOOL) isLessThan:(MPInteger *)x {
+    return [self compareWith:x] < 0;
 }
 
 

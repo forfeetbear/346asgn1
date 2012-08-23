@@ -24,9 +24,11 @@ int main(int argc, const char * argv[])
     
     @autoreleasepool {
         if (TESTING == YES) {
-            MPInteger *number1 = [[MPInteger alloc] initWithString:@"1111111111111111111111"];            
-            MPInteger *number2 = [[MPInteger alloc] initWithString:@"-1111111111111111111112"];
-            MPInteger *number3 = [number1 add:number2];
+            MPInteger *number1 = [[MPInteger alloc] initWithString:@"-3"];            
+            MPInteger *number2 = [[MPInteger alloc] initWithString:@"123"];
+            int comp = [number1 compareWith:number1];
+            NSLog(@"Comparison result: %d", comp);
+            MPInteger *number3 = [number1 multiply:number2];
             NSLog(@"%@", number1);
             NSLog(@"%@", number2);
             NSLog(@"%@", number3);
