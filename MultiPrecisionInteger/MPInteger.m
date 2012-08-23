@@ -250,6 +250,21 @@
     return finalResult;
 }
 
+-(MPInteger *) leftShift {
+    NSMutableString *res = [NSMutableString string];
+    for (int i = 1; i < [self length]; i++) {
+        [res appendFormat:@"%d", [self digitAt:i]];
+    }
+    [res appendFormat:@"0"];
+    return [[MPInteger alloc] initWithStringWithLeadingZeros:res];
+}
+
+-(MPInteger *) setDigit: (int) i to:(int) d {
+    NSMutableString *desc = [NSMutableString stringWithString:[self description]];
+    [desc replaceCharactersInRange:NSMakeRange(i, 1) withString:[NSString stringWithFormat:@"%d", d]];
+    return [[MPInteger alloc] initWithStringWithLeadingZeros:desc];
+}
+
 -(BOOL) isZero {
     for (int i = 0; i < [number count]; i++) {
         if ([[number objectAtIndex:i] intValue] != 0) return NO;
@@ -258,7 +273,24 @@
 }
 
 -(MPInteger *) divideBy:(MPInteger *)x {
-    return nil;
+    if ([x isZero]) return nil;
+    MPInteger *this = [self padToLength:[x length]];
+    x = [x padToLength:[self length]];   
+    MPInteger *quotient = [[MPInteger alloc] initWithString:@"0"];
+    MPInteger *remainder = [[MPInteger alloc] initWithString:@"0"]; 
+    quotient = [quotient padToLength:[this length]];
+    remainder = [remainder padToLength:[this length]];
+    for (int i = [this length] - 1; i >= 0; i--) {
+        remainder = [remainder leftShift];     
+        remainder = [remainder setDigit:[remainder length] - 1 to:[self digitAt:i]];
+        int count = 0;
+        while ([remainder compareWith:x]>= 0) {
+            remainder = [remainder subtract:x]; 
+            count++;
+        }        
+        quotient = [quotient setDigit:i to:count];
+    }
+    return quotient;
 }
 
 -(MPInteger *) modulus:(MPInteger *)x {
