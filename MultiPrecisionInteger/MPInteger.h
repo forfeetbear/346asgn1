@@ -29,6 +29,7 @@
 // you will also need to implement this comparison
 // to decode the secret message:
 -(int) compareWith:(MPInteger *)x;
+-(int) length;
 -(BOOL) isLessThan: (MPInteger *) x;
 -(BOOL) isPositive;
 -(BOOL) isZero;

@@ -16,78 +16,76 @@
 #import <Foundation/Foundation.h>
 #import "MPInteger.h"
 
-#define TESTING YES
-
 int main(int argc, const char * argv[])
 {
     
     
     @autoreleasepool {
-        if (TESTING) {            
-            MPInteger *number1 = [[MPInteger alloc] initWithString:@"-5"];  
-            MPInteger *number2 = [[MPInteger alloc] initWithString:@"-43"];
-            MPInteger *result = [number1 modulus:number2];
-            NSLog(@"%@ dividedby %@ = %@", number1, number2, result);
-        } else {
-            // the cipher text c:
-            MPInteger *encodedMessage = [[MPInteger alloc] initWithString:@"7807512491293448839140145421143868935616117960859576537030545231939229"];
+        int reduced = 0;
+        int lastReduced = 0;
+        // the cipher text c:
+        MPInteger *encodedMessage = [[MPInteger alloc] initWithString:@"7807512491293448839140145421143868935616117960859576537030545231939229"];
+        
+        // the exponent d:
+        MPInteger *decryptionExponent = [[MPInteger alloc] initWithString: @"14159819751754191295236210600607154703246410818878465976176726439085425"];
+        
+        // the modulus n:
+        MPInteger *modulusKey = [[MPInteger alloc] initWithString: @"27606985387162255149739023449107931668458716142620601169954803000803329"];
+        
+        // the decoded message consists of a string of upper case letters
+        // represent by two digit ASCII.  Using RSA, message = c^d mod n.
+        MPInteger *message;
+        
+        // we use the "square-and-multiply" algorithm to compute c^d mod n.
+        // this algorithm works according to the observation that c^d is (c^2)^(d/2)
+        // with an extra c on the outside if (d/2) has a remainder.
+        MPInteger *theNumberZero = [[MPInteger alloc] initWithString:@"0"];
+        MPInteger *theNumberOne = [[MPInteger alloc] initWithString:@"1"];
+        MPInteger *theNumberTwo = [[MPInteger alloc] initWithString:@"2"];
+        MPInteger *squaredPart = encodedMessage;
+        MPInteger *multipliedPart = theNumberOne;
+        MPInteger *reducedExponent = decryptionExponent;
+        MPInteger *reducedExponentRemainder;
+        do {
             
-            // the exponent d:
-            MPInteger *decryptionExponent = [[MPInteger alloc] initWithString: @"14159819751754191295236210600607154703246410818878465976176726439085425"];
+            // compute reduced exponent d/2 and remainder
+            reducedExponentRemainder = [reducedExponent modulus:theNumberTwo];
+            reducedExponent = [reducedExponent divideBy:theNumberTwo];
             
-            // the modulus n:
-            MPInteger *modulusKey = [[MPInteger alloc] initWithString: @"27606985387162255149739023449107931668458716142620601169954803000803329"];
+            // if the exponent is odd then we multiply the inside "c" to the
+            // outside of the c^(d/2) calculation
+            if ([theNumberZero isLessThan:reducedExponentRemainder]) {
+                multipliedPart = 
+                [[multipliedPart multiply:squaredPart] modulus:modulusKey];
+            }
             
-            // the decoded message consists of a string of upper case letters
-            // represent by two digit ASCII.  Using RSA, message = c^d mod n.
-            MPInteger *message;
+            // now we square the inside and proceed
             
-            // we use the "square-and-multiply" algorithm to compute c^d mod n.
-            // this algorithm works according to the observation that c^d is (c^2)^(d/2)
-            // with an extra c on the outside if (d/2) has a remainder.
-            MPInteger *theNumberZero = [[MPInteger alloc] initWithString:@"0"];
-            MPInteger *theNumberOne = [[MPInteger alloc] initWithString:@"1"];
-            MPInteger *theNumberTwo = [[MPInteger alloc] initWithString:@"2"];
-            MPInteger *squaredPart = encodedMessage;
-            MPInteger *multipliedPart = theNumberOne;
-            MPInteger *reducedExponent = decryptionExponent;
-            MPInteger *reducedExponentRemainder;
-            do {
-                
-                // compute reduced exponent d/2 and remainder
-                reducedExponentRemainder = [reducedExponent modulus:theNumberTwo];
-                reducedExponent = [reducedExponent divideBy:theNumberTwo];
-                
-                // if the exponent is odd then we multiply the inside "c" to the
-                // outside of the c^(d/2) calculation
-                if ([theNumberZero isLessThan:reducedExponentRemainder]) {
-                    multipliedPart = 
-                    [[multipliedPart multiply:squaredPart] modulus:modulusKey];
-                }
-                
-                // now we square the inside and proceed
-                
-                squaredPart = [[squaredPart multiply:squaredPart] modulus:modulusKey]; 
-                
-                // we stop when the reduced exponent is 2 or less
-                NSLog(@"%@", reducedExponent);
-            } while ([theNumberOne isLessThan:reducedExponent]);
+            squaredPart = [[squaredPart multiply:squaredPart] modulus:modulusKey]; 
             
-            // complete message calculation
-            message = [[squaredPart multiply:multipliedPart] modulus:modulusKey];            
-            // if it's the right length, print the message
-            NSString *messageStr = [message description];
-            if ([messageStr length] == 60)
-                for (int i = 0; i < 60; i += 2)
-                {
-                    int character = 
-                    [[messageStr substringWithRange:NSMakeRange(i, 2)] intValue];
-                    printf("%c",character);
-                }
-            else
-                NSLog(@"Decoded message is the wrong length -- keep trying.");
-            
-        }
-        return 0;
+            // we stop when the reduced exponent is 2 or less
+            lastReduced = reduced;
+            reduced = [decryptionExponent length] - [reducedExponent length];
+            if (lastReduced != reduced) {
+                NSLog(@"reduced %d out of %d", reduced, [decryptionExponent length] - 1);
+            }
+        } while ([theNumberOne isLessThan:reducedExponent]);
+        
+        // complete message calculation
+        message = [[squaredPart multiply:multipliedPart] modulus:modulusKey];            
+        // if it's the right length, print the message
+        NSString *messageStr = [message description];
+        if ([messageStr length] == 60)
+            for (int i = 0; i < 60; i += 2)
+            {
+                int character = 
+                [[messageStr substringWithRange:NSMakeRange(i, 2)] intValue];
+                printf("%c",character);
+            }
+        else
+            NSLog(@"Decoded message is the wrong length -- keep trying.");
+        
     }
+    return 0;
 }
+
