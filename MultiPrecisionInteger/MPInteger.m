@@ -71,17 +71,14 @@
     isPositive = val;
 }
 
--(MPInteger *) ninesComplementOf {
+-(MPInteger *) tensComplementOf {
     NSMutableString *ncomp = [NSMutableString string];
     for (int i = 0; i < [number count]; i++) {
         int comp = [[number objectAtIndex:i] intValue];
         comp = BASE - 1 - comp;
-        if (i == [number count] - 1) {
-            comp += 1;
-        }
         [ncomp appendString:[NSString stringWithFormat:@"%d", comp]];
     }
-    return [[MPInteger alloc] initWithStringWithLeadingZeros:ncomp];
+    return [[[MPInteger alloc] initWithStringWithLeadingZeros:ncomp] add:[[MPInteger alloc] initWithString:@"1"]];
 }
 
 -(MPInteger *)negate {
@@ -103,7 +100,7 @@
     return self;
 }
 
--(NSUInteger) length {
+-(int) length {
     return [number count];
 }
 
@@ -181,40 +178,34 @@
         MPInteger *this = [self padToLength:[x length]];
         x = [x padToLength:[self length]];
         // Find the complement of the subtrahend and then just add it ignoring the last carry
-        x = [x ninesComplementOf];
-        
+        x = [x tensComplementOf];
+        x = [x padToLength:[this length]];
+        NSMutableString *reversed = [NSMutableString string];
         int carry = 0;
-        NSMutableString *revresult = [[NSMutableString alloc] initWithString:@""];
-        
-        // To make it a bit easier I will build the string up backwards and then reverse it
-        for (int i = [this length] - 1; i >= 0; i--) {
-            int sum = [this digitAt:i] + [x digitAt:i] + carry;
-            NSNumber *digit = [[NSNumber alloc] initWithInt: sum % BASE];
+        for(int i = [this length] - 1; i >= 0; i--) {
+            int sum = carry + [this digitAt:i] + [x digitAt:i];
             carry = sum / BASE;
-            [revresult appendString:[digit stringValue]];
+            sum %= BASE;
+            [reversed appendFormat:@"%d", sum];
         }
-        // Now reverse the string so the numbers are in correct order
-        int i = [revresult length];
         NSMutableString *result = [NSMutableString string];
-        while (i > 0) {
-            i--;
-            [result appendString:[revresult substringWithRange:NSMakeRange(i, 1)]];
+        for(int x = [reversed length] - 1; x >= 0; x--) {
+            [result appendString:[reversed substringWithRange:NSMakeRange(x, 1)]];
         }
-        if (carry == 0) { //If the carry was zero then the result was negative so complement again
-            MPInteger *intresult = [[MPInteger alloc] initWithString:result];
-            intresult = [intresult ninesComplementOf];
-            intresult.isPositive = NO;
-            intresult = [[MPInteger alloc] initWithString:[intresult description]];
-            return intresult;
-        } else { //If the carry was not zero everything is fine
+        if (carry == 0) { // Answer is negative
+            MPInteger *comp = [[MPInteger alloc] initWithStringWithLeadingZeros:result];
+            comp = [comp tensComplementOf];
+            comp = [comp negate];
+            return comp;
+        } else {
             return [[MPInteger alloc] initWithString:result];
         }
-    }
+    } 
 }
 
 -(MPInteger *) multiply:(MPInteger *)x {
-    NSMutableArray *lines = [[NSMutableArray alloc] initWithCapacity:[x length]];
     NSMutableString *resString;
+    MPInteger *sumResult = [[MPInteger alloc] initWithString:@"0"];
     int carry, numZeroes = 0;
     for (int i = [x length] - 1; i >= 0; i--, numZeroes++) {
         resString = [NSMutableString string];
@@ -238,16 +229,9 @@
             x--;
             [result appendString:[resString substringWithRange:NSMakeRange(x, 1)]];
         }
-        [lines addObject:[[MPInteger alloc] initWithString:result]];
+        sumResult = [sumResult add:[[MPInteger alloc] initWithString:result]];
     }
-    
-    // Now we have all the lines so just sum them up to get the final answer
-    MPInteger *finalResult = [[MPInteger alloc] initWithString:@"0"];
-    for (int i = 0; i < [lines count]; i++) {
-        finalResult = [finalResult add:[lines objectAtIndex:i]];
-    }
-    finalResult.isPositive = x.isPositive == self.isPositive;
-    return finalResult;
+    return sumResult;
 }
 
 -(MPInteger *) leftShift {
@@ -272,29 +256,42 @@
     return YES;
 }
 
+-(MPInteger *) appendDigit: (int) i {
+    NSMutableString *res = [NSMutableString stringWithString:[self description]];
+    [res appendFormat:@"%d", i];
+    return [[MPInteger alloc] initWithString:res];
+}
+
 -(MPInteger *) divideBy:(MPInteger *)x {
     if ([x isZero]) return nil;
-    MPInteger *this = [self padToLength:[x length]];
-    x = [x padToLength:[self length]];   
-    MPInteger *quotient = [[MPInteger alloc] initWithString:@"0"];
-    MPInteger *remainder = [[MPInteger alloc] initWithString:@"0"]; 
-    quotient = [quotient padToLength:[this length]];
-    remainder = [remainder padToLength:[this length]];
-    for (int i = [this length] - 1; i >= 0; i--) {
-        remainder = [remainder leftShift];     
-        remainder = [remainder setDigit:[remainder length] - 1 to:[self digitAt:i]];
+    MPInteger *remainder = [[MPInteger alloc] initWithString:@"0"];
+    NSMutableString *quotient = [NSMutableString string];
+    for (int i = 0; i < [self length]; i++) {
         int count = 0;
-        while ([remainder compareWith:x]>= 0) {
-            remainder = [remainder subtract:x]; 
+        remainder = [remainder appendDigit:[self digitAt:i]];
+        while ([remainder compareWith:x] >= 0) {
             count++;
-        }        
-        quotient = [quotient setDigit:i to:count];
+            remainder = [remainder subtract:x];            
+        }
+        [quotient appendFormat:@"%d", count];
     }
-    return quotient;
+    return [[MPInteger alloc] initWithString:quotient];
 }
 
 -(MPInteger *) modulus:(MPInteger *)x {
-    return nil;
+    if ([x isZero]) return nil;
+    MPInteger *remainder = [[MPInteger alloc] initWithString:@"0"];
+    NSMutableString *quotient = [NSMutableString string];
+    for (int i = 0; i < [self length]; i++) {
+        int count = 0;
+        remainder = [remainder appendDigit:[self digitAt:i]];
+        while ([remainder compareWith:x] >= 0) {
+            count++;
+            remainder = [remainder subtract:x];            
+        }
+        [quotient appendFormat:@"%d", count];
+    }
+    return remainder;
 }
 
 -(int) compareWith:(MPInteger *)x {
