@@ -14,54 +14,54 @@
 
 -(id) initWithString:(NSString *)x {
     if (self = [super init]) {
+        NSScanner *scan;
         isPositive = ![[x substringWithRange:NSMakeRange(0, 1)] isEqualToString:@"-"];
         BOOL significant = NO;
-        NSScanner *scan;
         int size = isPositive ? [x length] : [x length] - 1;
-        number = [[NSMutableArray alloc] initWithCapacity:size];
+        numberDat = [[NSMutableData alloc]initWithLength:size * sizeof(size)];
         int i = isPositive ? 0 : 1;
+        int *num = [numberDat mutableBytes];
+        count = 0;
         for (; i < [x length]; i++) {
             int j;
             scan = [[NSScanner alloc] initWithString:[x substringWithRange:NSMakeRange(i, 1)]];
             if ([scan scanInt:&j]) {
-                if (j != 0) {                    
-                    NSNumber *ins = [[NSNumber alloc] initWithInt:j];
-                    [number addObject:ins];
+                if (j != 0) {
+                    num[count++] = j;
                     significant = YES;
-                } else if (j == 0 && significant) {      
-                    NSNumber *ins = [[NSNumber alloc] initWithInt:j];
-                    [number addObject:ins];                    
+                } else if (j == 0 && significant) {
+                    num[count++] = j;               
                 }
             } else {
                 return nil;
             }
         }
-        if ([number count] == 0) {
-            [number addObject:[[NSNumber alloc] initWithInt:0]];
+        if (count == 0) {
+            num[count++] = 0;
         }
     }    
     return self;
 }
 
 -(id) initWithStringWithLeadingZeros:(NSString *)x {
-    if (self = [super init]) {        
+    if (self = [super init]) {
+        NSScanner *scan;  
         isPositive = ![[x substringWithRange:NSMakeRange(0, 1)] isEqualToString:@"-"];
-        NSScanner *scan;
-        int size = isPositive ? [x length] : [x length] - 1;
-        number = [[NSMutableArray alloc] initWithCapacity:size];
+        int size = isPositive ? [x length] : [x length] - 1;       
+        numberDat = [[NSMutableData alloc]initWithLength:size * sizeof(size)];
         int i = isPositive ? 0 : 1;
+        int *num = [numberDat mutableBytes];
         for (; i < [x length]; i++) {
             int j;
             scan = [[NSScanner alloc] initWithString:[x substringWithRange:NSMakeRange(i, 1)]];
-            if ([scan scanInt:&j]) {                 
-                    NSNumber *ins = [[NSNumber alloc] initWithInt:j];
-                    [number addObject:ins];
+            if ([scan scanInt:&j]) {            
+                num[count++] = j;
             } else {
                 return nil;
             }
         }
-        if ([number count] == 0) {
-            [number addObject:[[NSNumber alloc] initWithInt:0]];
+        if (count == 0) {
+            num[count++] = 0;
         }
     }
     return self;
@@ -72,13 +72,15 @@
 }
 
 -(MPInteger *) tensComplementOf {
-    NSMutableString *ncomp = [NSMutableString string];
-    for (int i = 0; i < [number count]; i++) {
-        int comp = [[number objectAtIndex:i] intValue];
-        comp = BASE - 1 - comp;
-        [ncomp appendString:[NSString stringWithFormat:@"%d", comp]];
+    NSMutableString *acomp = [NSMutableString string];
+    int *pcomp = [numberDat mutableBytes];
+    for (int i = 0; i < count; i++) {
+        int tcomp = pcomp[i];
+        tcomp = BASE - 1 - tcomp;
+        [acomp appendFormat:@"%d", tcomp];
     }
-    return [[[MPInteger alloc] initWithStringWithLeadingZeros:ncomp] add:[[MPInteger alloc] initWithString:@"1"]];
+    //change to acomp
+    return [[[MPInteger alloc] initWithStringWithLeadingZeros:acomp] add:[[MPInteger alloc] initWithString:@"1"]];
 }
 
 -(MPInteger *)negate {
@@ -101,23 +103,25 @@
 }
 
 -(int) length {
-    return [number count];
+    return count;
 }
 
--(NSString *) description {
-    NSMutableString *result = [[NSMutableString alloc] initWithString:@""];
+-(NSString *) description {   
+    NSMutableString *tresult = [[NSMutableString alloc] initWithString:@""];
+    int *nums = [numberDat mutableBytes];
     if (!isPositive) {
-        [result appendString:@"-"];
+        [tresult appendString:@"-"];
     }
-    for (NSNumber *num in number) {
-        [result appendString:[num stringValue]];
+    for (int i = 0; i < count; i++) {
+        [tresult appendFormat:@"%d", nums[i]];
     }
-    return [NSString stringWithString:result];
+    return tresult;
 }
 
 -(int) digitAt:(int) index {
-    if (index < [self length] && index >= 0) {
-            return [[number objectAtIndex:index] intValue];
+    int *nums = [numberDat mutableBytes];
+    if (index < count && index >= 0) {
+            return nums[index];
     }
     return -1;
 }
@@ -125,8 +129,6 @@
 -(BOOL) isPositive {
     return isPositive;
 }
-
-
 
 -(MPInteger *) add:(MPInteger *)x {
     // Do the appropriate case when numbers are negative
@@ -146,9 +148,9 @@
         // To make it a bit easier I will build the string up backwards and then reverse it
         for (int i = [this length] - 1; i >= 0; i--) {
             int sum = [this digitAt:i] + [x digitAt:i] + carry;
-            NSNumber *digit = [[NSNumber alloc] initWithInt: sum % BASE];
             carry = sum / BASE;
-            [revresult appendString:[digit stringValue]];
+            sum %= BASE;
+            [revresult appendFormat:@"%d", sum];
         }
         if (carry > 0) {
             [revresult appendString:[NSString stringWithFormat:@"%d", carry]];
@@ -174,6 +176,9 @@
     } else if (!isPositive && x.isPositive) {
         return [[[self negate] add:x] negate];
     } else {
+        if ([self isZero] && [x isZero]) {
+            return [[MPInteger alloc] initWithString:@"0"];
+        }
         // Make sure the two numbers are the same length
         MPInteger *this = [self padToLength:[x length]];
         x = [x padToLength:[self length]];
@@ -234,24 +239,10 @@
     return sumResult;
 }
 
--(MPInteger *) leftShift {
-    NSMutableString *res = [NSMutableString string];
-    for (int i = 1; i < [self length]; i++) {
-        [res appendFormat:@"%d", [self digitAt:i]];
-    }
-    [res appendFormat:@"0"];
-    return [[MPInteger alloc] initWithStringWithLeadingZeros:res];
-}
-
--(MPInteger *) setDigit: (int) i to:(int) d {
-    NSMutableString *desc = [NSMutableString stringWithString:[self description]];
-    [desc replaceCharactersInRange:NSMakeRange(i, 1) withString:[NSString stringWithFormat:@"%d", d]];
-    return [[MPInteger alloc] initWithStringWithLeadingZeros:desc];
-}
-
 -(BOOL) isZero {
-    for (int i = 0; i < [number count]; i++) {
-        if ([[number objectAtIndex:i] intValue] != 0) return NO;
+    int *nums = [numberDat mutableBytes];
+    for (int i = 0; i < count; i++) {
+        if (nums[i] != 0) return NO;
     }
     return YES;
 }
@@ -264,34 +255,65 @@
 
 -(MPInteger *) divideBy:(MPInteger *)x {
     if ([x isZero]) return nil;
+    BOOL xWasPos = YES;
+    if (![x isPositive]) {
+        xWasPos = NO;
+        x = [x negate];
+    }
     MPInteger *remainder = [[MPInteger alloc] initWithString:@"0"];
     NSMutableString *quotient = [NSMutableString string];
     for (int i = 0; i < [self length]; i++) {
-        int count = 0;
+        int q = 0;
         remainder = [remainder appendDigit:[self digitAt:i]];
         while ([remainder compareWith:x] >= 0) {
-            count++;
+            q++;
             remainder = [remainder subtract:x];            
         }
-        [quotient appendFormat:@"%d", count];
+        [quotient appendFormat:@"%d", q];
+    }
+    MPInteger *answer = [[MPInteger alloc] initWithString:quotient];
+    if ([self isPositive] != xWasPos) {
+        if ([answer isZero]) {
+            return [answer subtract:[[MPInteger alloc] initWithString:@"1"]];
+        } else {
+            return [answer negate];
+        }
     }
     return [[MPInteger alloc] initWithString:quotient];
 }
 
 -(MPInteger *) modulus:(MPInteger *)x {
-    if ([x isZero]) return nil;
+    if ([x isZero]) return nil;    
+    BOOL xWasPos = YES;
+    if (![x isPositive]) {
+        xWasPos = NO;
+        x = [x negate];
+    }
     MPInteger *remainder = [[MPInteger alloc] initWithString:@"0"];
     NSMutableString *quotient = [NSMutableString string];
     for (int i = 0; i < [self length]; i++) {
-        int count = 0;
+        int q = 0;
         remainder = [remainder appendDigit:[self digitAt:i]];
         while ([remainder compareWith:x] >= 0) {
-            count++;
+            q++;
             remainder = [remainder subtract:x];            
         }
-        [quotient appendFormat:@"%d", count];
+        [quotient appendFormat:@"%d", q];
     }
-    return remainder;
+    if (![self isPositive] == !xWasPos) {
+        if (![self isPositive]) {
+            return [remainder negate];
+        } else {
+            return remainder;
+        }
+    } else {
+        remainder = [x subtract:remainder];
+        if ([self isPositive]) {
+            return [remainder negate];
+        } else {
+            return remainder;
+        }        
+    }
 }
 
 -(int) compareWith:(MPInteger *)x {

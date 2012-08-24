@@ -16,7 +16,7 @@
 #import <Foundation/Foundation.h>
 #import "MPInteger.h"
 
-#define TESTING NO
+#define TESTING YES
 
 int main(int argc, const char * argv[])
 {
@@ -24,10 +24,10 @@ int main(int argc, const char * argv[])
     
     @autoreleasepool {
         if (TESTING) {            
-            MPInteger *number1 = [[MPInteger alloc] initWithString:@"90214515200000000000000"];  
-            MPInteger *number2 = [[MPInteger alloc] initWithString:@"3109630316932173063097"];
-            MPInteger *result = [number2 multiply:number1];
-            NSLog(@"%@ * %@ = %@", number2, number1, result);
+            MPInteger *number1 = [[MPInteger alloc] initWithString:@"-5"];  
+            MPInteger *number2 = [[MPInteger alloc] initWithString:@"-43"];
+            MPInteger *result = [number1 modulus:number2];
+            NSLog(@"%@ dividedby %@ = %@", number1, number2, result);
         } else {
             // the cipher text c:
             MPInteger *encodedMessage = [[MPInteger alloc] initWithString:@"7807512491293448839140145421143868935616117960859576537030545231939229"];
@@ -60,24 +60,21 @@ int main(int argc, const char * argv[])
                 
                 // if the exponent is odd then we multiply the inside "c" to the
                 // outside of the c^(d/2) calculation
-                if ([theNumberZero isLessThan: reducedExponentRemainder])
+                if ([theNumberZero isLessThan:reducedExponentRemainder]) {
                     multipliedPart = 
                     [[multipliedPart multiply:squaredPart] modulus:modulusKey];
+                }
                 
                 // now we square the inside and proceed
-                printf("multiplying %s by %s\n", [[squaredPart description] cString], [[squaredPart description] cString]);
-                squaredPart = [[squaredPart multiply:squaredPart] modulus:modulusKey];                
-                printf("result: %s\n", [[squaredPart description] cString]);
+                
+                squaredPart = [[squaredPart multiply:squaredPart] modulus:modulusKey]; 
                 
                 // we stop when the reduced exponent is 2 or less
-                
+                NSLog(@"%@", reducedExponent);
             } while ([theNumberOne isLessThan:reducedExponent]);
             
             // complete message calculation
-            printf("multiplying %s by %s\n", [[squaredPart description] cString], [[multipliedPart description] cString]);
             message = [[squaredPart multiply:multipliedPart] modulus:modulusKey];            
-            printf("result: %s\n", [[message description] cString]);
-            
             // if it's the right length, print the message
             NSString *messageStr = [message description];
             if ([messageStr length] == 60)

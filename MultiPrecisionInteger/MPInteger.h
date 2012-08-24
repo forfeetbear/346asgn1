@@ -9,7 +9,8 @@
 #import <Foundation/Foundation.h>
 
 @interface MPInteger : NSObject {
-    NSMutableArray *number;
+    NSMutableData *numberDat;
+    int count;
     BOOL isPositive;
 }
 
@@ -30,5 +31,6 @@
 -(int) compareWith:(MPInteger *)x;
 -(BOOL) isLessThan: (MPInteger *) x;
 -(BOOL) isPositive;
+-(BOOL) isZero;
 
 @end
